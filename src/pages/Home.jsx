@@ -1,20 +1,32 @@
 import MangaCard from "../components/MangaCard";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { searchMangas, getPopularMangas } from "../services/api";
+import "../css/Home.css";
 
 function Home() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [mangas, setMangas] = useState([]);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const manga = [
-    { id: 1, title: "One Piece", release_date: "1997" },
-    { id: 2, title: "Naruto", release_date: "1999" },
-    { id: 3, title: "Bleach", release_date: "2002" },
-    { id: 4, title: "Gintama", release_date: "2004" },
-  ];
+  useEffect(() => {
+    const loadPopularMangas = async () => {
+      try {
+        const popularMangas = await getPopularMangas();
+        setMangas(popularMangas);
+      } catch (err) {
+        console.log(err);
+        setError("Failed to load mangas...");
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadPopularMangas();
+  }, []);
 
-  const handleSearch = () => {
+  const handleSearch = (e) => {
     e.preventDefault();
     alert(searchQuery);
-
     setSearchQuery("");
   };
 
@@ -32,11 +44,18 @@ function Home() {
           Search
         </button>
       </form>
-      <div className="mangas-grid">
-        {manga.map((manga) => (
-          <MangaCard manga={manga} key={manga.id} />
-        ))}
-      </div>
+
+      {error && <p className="error">{error}</p>}
+
+      {loading ? (
+        <div className="loading">Loading...</div>
+      ) : (
+        <div className="mangas-grid">
+          {mangas.map((manga) => (
+            <MangaCard manga={manga} key={manga.id} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
