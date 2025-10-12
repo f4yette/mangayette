@@ -60,7 +60,7 @@
   box-sizing: border-box;
 }
 
-@media (min-width) {
+@media (min-width: 1200px) {
   .manga-grid {
     grid-template-columns: repeat(5, 1fr);
   }
