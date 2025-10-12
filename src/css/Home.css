@@ -52,13 +52,12 @@
   }
 }
 
-.manga-grid {
+.mangas-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, 300px);
-  grid-auto-rows: 450px;
-  gap: 1.5rem;
-  padding: 1rem;
+  grid-template-columns: repeat(auto-fill, 180px);
+  grid-auto-rows: 270px;
+  gap: 20px;
   justify-content: center;
-  width: 100%;
+  padding: 1rem;
   box-sizing: border-box;
 }
