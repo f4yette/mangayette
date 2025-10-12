@@ -54,9 +54,14 @@
 
 .manga-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 1.5rem;
   padding: 1rem;
   width: 100%;
   box-sizing: border-box;
+}
+
+@media (min-width) {
+  .manga-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
 }
