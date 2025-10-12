@@ -9,7 +9,7 @@ function NavBar() {
       </div>
       <div className="navbar-links">
         <Link to="/" className="nav-link">
-          Home
+          home
         </Link>
         <Link to="/favourites" className="nav-link">
           Favourties
