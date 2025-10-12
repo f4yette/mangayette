@@ -52,12 +52,19 @@
   }
 }
 
-.mangas-grid {
+mangas-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, 180px);
-  grid-auto-rows: 270px;
+  grid-auto-rows: 320px;
   gap: 20px;
   justify-content: center;
   padding: 1rem;
   box-sizing: border-box;
+}
+
+@media (max-width: 600px) {
+  .mangas-grid {
+    gap: 16px;
+    padding: 0.75rem;
+  }
 }
