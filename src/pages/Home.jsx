@@ -41,7 +41,7 @@ function Home() {
           onChange={(e) => setSearchQuery(e.target.value)}
         />
         <button type="submit" className="search button">
-          Search
+          search
         </button>
       </form>
 
