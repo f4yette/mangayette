@@ -1,6 +1,6 @@
 import MangaCard from "../components/MangaCard";
 import { useState, useEffect } from "react";
-import { getPopularMangas } from "../services/api";
+import { getPopularMangas, searchMangas } from "../services/api";
 import "../css/Home.css";
 
 function Home() {
@@ -9,19 +9,28 @@ function Home() {
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const totalPages = 50;
   const windowSize = 10;
 
-  const loadMangas = async (pageNum) => {
+  const loadMangas = async (pageNum, query = "") => {
     try {
       setLoading(true);
-      const data = await getPopularMangas(pageNum);
-      setMangas(data.media);
+      const data = query
+        ? await searchMangas(query, pageNum)
+        : await getPopularMangas(pageNum);
+      const filtered = query
+        ? data.media.filter((m) =>
+            (m?.title?.english || m?.title?.romaji || "")
+              .toLowerCase()
+              .startsWith(query.toLowerCase())
+          )
+        : data.media;
+      setMangas(filtered);
       setHasMore(data.pageInfo.hasNextPage);
       setPage(data.pageInfo.currentPage);
-    } catch (err) {
-      console.log(err);
+    } catch {
       setError("Failed to load mangas...");
     } finally {
       setLoading(false);
@@ -29,16 +38,23 @@ function Home() {
   };
 
   useEffect(() => {
-    loadMangas(1);
-  }, []);
+    const delay = setTimeout(() => {
+      loadMangas(1, searchQuery.trim());
+    }, 500);
+    return () => clearTimeout(delay);
+  }, [searchQuery]);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    loadMangas(1, searchQuery.trim());
+  };
 
   const handlePageChange = (newPage) => {
     if (newPage < 1 || newPage > totalPages || newPage === page) return;
-    loadMangas(newPage);
+    loadMangas(newPage, searchQuery.trim());
   };
 
-  const startPage =
-    Math.floor(((page - 1) * 1.0) / windowSize) * windowSize + 1;
+  const startPage = Math.floor((page - 1) / windowSize) * windowSize + 1;
   const endPage = Math.min(startPage + windowSize - 1, totalPages);
   const pages = Array.from(
     { length: endPage - startPage + 1 },
@@ -47,6 +63,19 @@ function Home() {
 
   return (
     <div className="home">
+      <form onSubmit={handleSearch} className="search-form">
+        <input
+          type="text"
+          placeholder="search for mangas..."
+          className="search-input"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        <button type="submit" className="search-button">
+          Search
+        </button>
+      </form>
+
       {error && <p className="error">{error}</p>}
 
       <div className="mangas-grid">
