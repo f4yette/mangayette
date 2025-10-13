@@ -1,5 +1,6 @@
 import MangaCard from "../components/MangaCard";
 import { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { getPopularMangas, searchMangas } from "../services/api";
 import "../css/Home.css";
 
@@ -10,9 +11,11 @@ function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
-
   const totalPages = 50;
   const windowSize = 10;
+
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const loadMangas = async (pageNum, query = "") => {
     try {
@@ -38,11 +41,22 @@ function Home() {
   };
 
   useEffect(() => {
-    const delay = setTimeout(() => {
-      loadMangas(1, searchQuery.trim());
-    }, 500);
-    return () => clearTimeout(delay);
+    loadMangas(1, "");
+  }, []);
+
+  useEffect(() => {
+    const q = searchQuery.trim();
+    const t = setTimeout(() => loadMangas(1, q), 500);
+    return () => clearTimeout(t);
   }, [searchQuery]);
+
+  useEffect(() => {
+    if (location.state?.reset) {
+      setSearchQuery("");
+      loadMangas(1, "");
+      navigate("/", { replace: true, state: null });
+    }
+  }, [location.state, navigate]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -66,7 +80,7 @@ function Home() {
       <form onSubmit={handleSearch} className="search-form">
         <input
           type="text"
-          placeholder="search for mangas..."
+          placeholder="Search for Mangas..."
           className="search-input"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
@@ -94,7 +108,6 @@ function Home() {
         >
           ‹
         </button>
-
         {pages.map((n) => (
           <button
             key={n}
@@ -105,7 +118,6 @@ function Home() {
             {n}
           </button>
         ))}
-
         <button
           className="page-btn"
           onClick={() => handlePageChange(endPage + 1)}
