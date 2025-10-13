@@ -16,7 +16,7 @@ function Navbar() {
             isActive ? "nav-link active" : "nav-link"
           }
         >
-          Home
+          home
         </NavLink>
         <NavLink
           to="/favourites"
