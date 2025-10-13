@@ -24,7 +24,7 @@ function Navbar() {
             isActive ? "nav-link active" : "nav-link"
           }
         >
-          Favourites
+          favourites
         </NavLink>
       </div>
     </nav>
