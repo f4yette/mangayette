@@ -10,6 +10,9 @@ function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const totalPages = 50;
+  const windowSize = 10;
+
   const loadMangas = async (pageNum) => {
     try {
       setLoading(true);
@@ -30,10 +33,17 @@ function Home() {
   }, []);
 
   const handlePageChange = (newPage) => {
+    if (newPage < 1 || newPage > totalPages || newPage === page) return;
     loadMangas(newPage);
   };
 
-  const totalPages = 50;
+  const startPage =
+    Math.floor(((page - 1) * 1.0) / windowSize) * windowSize + 1;
+  const endPage = Math.min(startPage + windowSize - 1, totalPages);
+  const pages = Array.from(
+    { length: endPage - startPage + 1 },
+    (_, i) => startPage + i
+  );
 
   return (
     <div className="home">
@@ -48,18 +58,32 @@ function Home() {
       {loading && <div className="loading">Loading...</div>}
 
       <div className="pagination">
-        {[...Array(totalPages)].map((_, i) => {
-          const pageNum = i + 1;
-          return (
-            <button
-              key={pageNum}
-              className={page === pageNum ? "page-btn active" : "page-btn"}
-              onClick={() => handlePageChange(pageNum)}
-            >
-              {pageNum}
-            </button>
-          );
-        })}
+        <button
+          className="page-btn"
+          onClick={() => handlePageChange(startPage - 1)}
+          disabled={startPage === 1 || loading}
+        >
+          ‹
+        </button>
+
+        {pages.map((n) => (
+          <button
+            key={n}
+            className={page === n ? "page-btn active" : "page-btn"}
+            onClick={() => handlePageChange(n)}
+            disabled={loading}
+          >
+            {n}
+          </button>
+        ))}
+
+        <button
+          className="page-btn"
+          onClick={() => handlePageChange(endPage + 1)}
+          disabled={endPage === totalPages || loading || !hasMore}
+        >
+          ›
+        </button>
       </div>
     </div>
   );
