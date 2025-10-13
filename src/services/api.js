@@ -18,6 +18,10 @@ export async function getPopularMangas(page = 1, perPage = 20) {
   const query = `
     query ($page:Int!, $perPage:Int!) {
       Page(page:$page, perPage:$perPage) {
+        pageInfo {
+          currentPage
+          hasNextPage
+        }
         media(type: MANGA, sort: POPULARITY_DESC) {
           id
           title { romaji english native }
@@ -31,13 +35,17 @@ export async function getPopularMangas(page = 1, perPage = 20) {
     }
   `;
   const data = await fetchGraphQL(query, { page, perPage });
-  return data.Page.media;
+  return data.Page;
 }
 
 export async function searchMangas(search, page = 1, perPage = 20) {
   const query = `
     query ($search:String!, $page:Int!, $perPage:Int!) {
       Page(page:$page, perPage:$perPage) {
+        pageInfo {
+          currentPage
+          hasNextPage
+        }
         media(type: MANGA, search:$search, sort: POPULARITY_DESC) {
           id
           title { romaji english native }
@@ -51,5 +59,5 @@ export async function searchMangas(search, page = 1, perPage = 20) {
     }
   `;
   const data = await fetchGraphQL(query, { search, page, perPage });
-  return data.Page.media;
+  return data.Page;
 }
