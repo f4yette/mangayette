@@ -1,61 +1,66 @@
 import MangaCard from "../components/MangaCard";
 import { useState, useEffect } from "react";
-import { searchMangas, getPopularMangas } from "../services/api";
+import { getPopularMangas } from "../services/api";
 import "../css/Home.css";
 
 function Home() {
-  const [searchQuery, setSearchQuery] = useState("");
   const [mangas, setMangas] = useState([]);
-  const [error, setError] = useState(null);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const loadMangas = async (pageNum) => {
+    try {
+      setLoading(true);
+      const data = await getPopularMangas(pageNum);
+      setMangas(data.media);
+      setHasMore(data.pageInfo.hasNextPage);
+      setPage(data.pageInfo.currentPage);
+    } catch (err) {
+      console.log(err);
+      setError("Failed to load mangas...");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const loadPopularMangas = async () => {
-      try {
-        const popularMangas = await getPopularMangas();
-        setMangas(popularMangas);
-      } catch (err) {
-        console.log(err);
-        setError("Failed to load mangas...");
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadPopularMangas();
+    loadMangas(1);
   }, []);
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    alert(searchQuery);
-    setSearchQuery("");
+  const handlePageChange = (newPage) => {
+    loadMangas(newPage);
   };
+
+  const totalPages = 10; // optional cap — AniList has lots of manga
 
   return (
     <div className="home">
-      <form onSubmit={handleSearch} className="search-form">
-        <input
-          type="text"
-          placeholder=" search for mangas..."
-          className="search-input"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-        <button type="submit" className="search button">
-          search
-        </button>
-      </form>
-
       {error && <p className="error">{error}</p>}
 
-      {loading ? (
-        <div className="loading">Loading...</div>
-      ) : (
-        <div className="mangas-grid">
-          {mangas.map((manga) => (
-            <MangaCard manga={manga} key={manga.id} />
-          ))}
-        </div>
-      )}
+      <div className="mangas-grid">
+        {mangas.map((manga) => (
+          <MangaCard manga={manga} key={manga.id} />
+        ))}
+      </div>
+
+      {loading && <div className="loading">Loading...</div>}
+
+      <div className="pagination">
+        {[...Array(totalPages)].map((_, i) => {
+          const pageNum = i + 1;
+          return (
+            <button
+              key={pageNum}
+              className={page === pageNum ? "page-btn active" : "page-btn"}
+              onClick={() => handlePageChange(pageNum)}
+            >
+              {pageNum}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
