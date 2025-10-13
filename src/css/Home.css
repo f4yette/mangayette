@@ -30,23 +30,24 @@
 
 .search-button {
   padding: 0.75rem 1.5rem;
-  background-color: #e50914;
+  background-color: #8b5cf6;
   color: white;
+  border: none;
   border-radius: 4px;
   font-weight: 500;
   transition: background-color 0.2s;
   white-space: nowrap;
+  cursor: pointer;
 }
 
 .search-button:hover {
-  background-color: #f40612;
+  background-color: #a78bfa;
 }
 
 @media (max-width: 639px) {
   .home {
     padding: 1rem 0;
   }
-
   .search-form {
     margin-bottom: 1rem;
   }
@@ -67,6 +68,12 @@
   }
 }
 
+@media (max-width: 768px) {
+  .mangas-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 .pagination {
   display: flex;
   justify-content: center;
@@ -84,6 +91,7 @@
   cursor: pointer;
   transition: background-color 0.2s, border-color 0.2s;
 }
+
 .page-btn:hover {
   background-color: #8b5cf6;
   border-color: #8b5cf6;
