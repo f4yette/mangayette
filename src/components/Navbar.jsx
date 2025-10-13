@@ -3,9 +3,8 @@ import "../css/Navbar.css";
 
 function Navbar() {
   const navigate = useNavigate();
-
   const goHome = () => {
-    navigate("/");
+    navigate("/", { state: { reset: true } });
     window.scrollTo(0, 0);
   };
 
