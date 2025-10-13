@@ -33,7 +33,7 @@ function Home() {
     loadMangas(newPage);
   };
 
-  const totalPages = 10; // optional cap — AniList has lots of manga
+  const totalPages = 50;
 
   return (
     <div className="home">
