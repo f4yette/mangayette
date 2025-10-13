@@ -85,11 +85,11 @@
   transition: background-color 0.2s, border-color 0.2s;
 }
 .page-btn:hover {
-  background-color: #ff4757;
-  border-color: #ff4757;
+  background-color: #8b5cf6;
+  border-color: #8b5cf6;
 }
 
 .page-btn.active {
-  background-color: #ff4757;
-  border-color: #ff4757;
+  background-color: #8b5cf6;
+  border-color: #8b5cf6;
 }
