@@ -13,9 +13,10 @@
   color: #6b4eff;
 }
 
-.navbar-links {
+.nav-links {
   display: flex;
-  gap: 2rem;
+  gap: 1.5rem;
+  align-items: center;
 }
 
 .nav-link {
@@ -24,11 +25,12 @@
   border-radius: 4px;
   color: #ffffff;
   text-decoration: none;
-  transition: color 0.3s ease;
+  transition: color 0.3s ease, text-shadow 0.3s ease;
 }
 
 .nav-link:hover {
   color: #a259ff;
+  text-shadow: 0 0 8px rgba(162, 89, 255, 0.8);
 }
 
 @media (max-width: 768px) {
@@ -40,7 +42,7 @@
     font-size: 1.2rem;
   }
 
-  .navbar-links {
+  .nav-links {
     gap: 1rem;
   }
 
