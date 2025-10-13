@@ -1,17 +1,25 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import "../css/Navbar.css";
 
 function Navbar() {
+  const navigate = useNavigate();
+
+  const goHome = () => {
+    navigate("/");
+    window.scrollTo(0, 0);
+  };
+
   return (
     <nav className="navbar">
       <div className="navbar-brand">
-        <NavLink to="/" className="nav-brand-link">
+        <button onClick={goHome} className="nav-brand-link">
           mangayette
-        </NavLink>
+        </button>
       </div>
       <div className="nav-links">
         <NavLink
           to="/"
+          onClick={goHome}
           className={({ isActive }) =>
             isActive ? "nav-link active" : "nav-link"
           }
