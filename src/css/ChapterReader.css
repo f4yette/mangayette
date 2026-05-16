@@ -1,0 +1,43 @@
+.chapter-reader {
+  width: 100%;
+  color: rgba(255, 255, 255, 0.87);
+}
+
+.chapter-reader .back-btn {
+  background-color: transparent;
+  border: 1px solid #8b5cf6;
+  color: #c4b5fd;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  margin-bottom: 2rem;
+  transition: all 0.2s ease;
+}
+
+.chapter-reader .back-btn:hover {
+  background-color: rgba(139, 92, 246, 0.15);
+}
+
+.chapter-pages {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.chapter-pages img {
+  width: 100%;
+  max-width: 800px;
+  height: auto;
+  display: block;
+  border-radius: 4px;
+}
+
+@media (max-width: 768px) {
+  .chapter-pages img {
+    width: 100%;
+    max-width: 100%;
+  }
+}
