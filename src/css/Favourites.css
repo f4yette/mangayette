@@ -1,36 +1,35 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&display=swap');
+
 .favourites {
-  padding: 2rem;
+  padding: 2rem 1rem;
   width: 100%;
   box-sizing: border-box;
 }
 
-.favourites h2 {
-  margin-bottom: 2rem;
-  text-align: center;
-  font-size: 2.5rem;
-  color: #ffffff;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+.favourites h1 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2rem;
+  letter-spacing: 3px;
+  color: #fff;
+  margin-bottom: 1.5rem;
+  padding: 0 0.5rem;
 }
 
-.favourites-empty {
+.no-favourites {
   text-align: center;
   padding: 4rem 2rem;
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: rgba(255, 255, 255, 0.03);
   border-radius: 12px;
   margin: 2rem auto;
   max-width: 600px;
-}
-
-.favourites-empty h2 {
-  margin-bottom: 1rem;
-  font-size: 2rem;
-  color: #e50914;
-}
-
-.favourites-empty p {
-  color: #999;
-  font-size: 1.2rem;
+  color: #888;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 1rem;
   line-height: 1.6;
+}
+
+.favourite-btn.active {
+  color: #ff4757;
 }
 
 @keyframes fadeIn {
@@ -44,6 +43,6 @@
   }
 }
 
-.manga-grid > * {
+.mangas-grid > * {
   animation: fadeIn 0.3s ease-out forwards;
 }
