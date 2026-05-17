@@ -1,6 +1,7 @@
-const BASE_URL = "https://graphql.anilist.co";
+const PROXY = "https://mangayette-proxy.ahmedahmedd1012.workers.dev";
+
 async function fetchGraphQL(query, variables = {}) {
-const res = await fetch(BASE_URL, {
+const res = await fetch(`${PROXY}/anilist`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify({ query, variables }),
@@ -105,19 +106,19 @@ return data.Media;
 }
 export async function getMangaDexChapters(title) {
 const searchRes = await fetch(
-`https://api.mangadex.org/manga?title=${encodeURIComponent(title)}&limit=1`
+`${PROXY}/mangadex/manga?title=${encodeURIComponent(title)}&limit=1`
   );
 const searchData = await searchRes.json();
 const mangaId = searchData?.data?.[0]?.id;
 if (!mangaId) return [];
 const chapterRes = await fetch(
-`https://api.mangadex.org/chapter?manga=${mangaId}&translatedLanguage[]=en&order[chapter]=asc&limit=100`
+`${PROXY}/mangadex/chapter?manga=${mangaId}&translatedLanguage[]=en&order[chapter]=asc&limit=100`
   );
 const chapterData = await chapterRes.json();
 return chapterData?.data || [];
 }
 export async function getChapterPages(chapterId) {
-const res = await fetch(`https://api.mangadex.org/at-home/server/${chapterId}`);
+const res = await fetch(`${PROXY}/mangadex/at-home/server/${chapterId}`);
 const data = await res.json();
 const base = data.baseUrl;
 const hash = data.chapter.hash;
