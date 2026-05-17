@@ -111,6 +111,7 @@ type={isSignUp ? "email" : "text"}
 placeholder={isSignUp ? "Email" : "Email or Username"}
 value={emailOrUsername}
 onChange={(e) => setEmailOrUsername(e.target.value)}
+autoComplete="off"
 required
 />
 {isSignUp && (
@@ -119,6 +120,7 @@ type="text"
 placeholder="Username"
 value={username}
 onChange={(e) => setUsername(e.target.value)}
+autoComplete="off"
 required
 minLength={3}
 maxLength={20}
@@ -129,6 +131,7 @@ type="password"
 placeholder="Password"
 value={password}
 onChange={(e) => setPassword(e.target.value)}
+autoComplete="off"
 required
 />
 {isSignUp && (
