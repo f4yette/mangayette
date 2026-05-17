@@ -1,5 +1,4 @@
 const PROXY = "https://mangayette-proxy.ahmedahmedd1012.workers.dev";
-const MANGADEX_BASE = "https://api.mangadex.org";
 
 async function fetchGraphQL(query, variables = {}) {
 const res = await fetch(`${PROXY}/anilist`, {
@@ -48,7 +47,7 @@ if (sort === "TRENDING_DESC") order = "relevance";
 if (sort === "POPULARITY_DESC") order = "followedCount";
 try {
 const res = await fetch(
-`${MANGADEX_BASE}/manga?limit=${perPage}&offset=${offset}&order[${order}]=desc&contentRating[]=safe&contentRating[]=suggestive&includes[]=cover_art`
+`${PROXY}/mangadex/manga?limit=${perPage}&offset=${offset}&order[${order}]=desc&contentRating[]=safe&contentRating[]=suggestive&includes[]=cover_art`
     );
 const data = await res.json();
 return {
@@ -67,7 +66,7 @@ async function getMangaDexSearch(search, page = 1, perPage = 20) {
 const offset = (page - 1) * perPage;
 try {
 const res = await fetch(
-`${MANGADEX_BASE}/manga?title=${encodeURIComponent(search)}&limit=${perPage}&offset=${offset}&contentRating[]=safe&contentRating[]=suggestive&includes[]=cover_art`
+`${PROXY}/mangadex/manga?title=${encodeURIComponent(search)}&limit=${perPage}&offset=${offset}&contentRating[]=safe&contentRating[]=suggestive&includes[]=cover_art`
     );
 const data = await res.json();
 return {
@@ -172,7 +171,7 @@ const data = await fetchGraphQL(query, { id });
 return data.Media;
   } catch {
 try {
-const res = await fetch(`${MANGADEX_BASE}/manga/${id}?includes[]=cover_art`);
+const res = await fetch(`${PROXY}/mangadex/manga/${id}?includes[]=cover_art`);
 const data = await res.json();
 return mdToAnilistFormat(data.data);
       } catch {
