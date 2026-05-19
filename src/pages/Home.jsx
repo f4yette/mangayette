@@ -47,21 +47,17 @@ try {
 setLoading(true);
 setError(null);
 const data = query
-? await searchMangas(query, pageNum)
+? await searchMangas(query, 1, 100)
 : await getPopularMangasBySort([sort], pageNum);
 const filtered = query
-? data.media
-.filter(isSafeContent)
-.filter((m) =>
-(m?.title?.english || m?.title?.romaji || "")
-.toLowerCase()
-.startsWith(query.toLowerCase())
-)
+? data.media.filter(isSafeContent)
 : data.media.filter(isSafeContent);
 setMangas(filtered);
 if (!query) setAllMangas(filtered);
+if (!query) {
 setHasMore(data.pageInfo.hasNextPage);
 setPage(data.pageInfo.currentPage);
+      }
     } catch {
 setError("Failed to load mangas...");
     } finally {
@@ -161,7 +157,7 @@ onClick={() => handleSortChange(opt.value)}
 ))}
       </div>
 {error && <p className="error">{error}</p>}
-      <p className="section-label">— <span>{activeSortLabel}</span></p>
+      <p className="section-label">— <span>{searchQuery ? `Results for "${searchQuery}"` : activeSortLabel}</span></p>
       <div className="mangas-grid">
 {loading ? (
 <div className="grid-loading">Loading...</div>
@@ -171,13 +167,15 @@ mangas.map((manga) => (
 ))
 )}
       </div>
-      <div className="pagination">
-        <button className="page-btn" onClick={() => handlePageChange(startPage - 1)} disabled={startPage === 1 || loading}>‹</button>
+{!searchQuery && (
+<div className="pagination">
+          <button className="page-btn" onClick={() => handlePageChange(startPage - 1)} disabled={startPage === 1 || loading}>‹</button>
 {pages.map((n) => (
 <button key={n} className={page === n ? "page-btn active" : "page-btn"} onClick={() => handlePageChange(n)} disabled={loading}>{n}</button>
 ))}
-        <button className="page-btn" onClick={() => handlePageChange(endPage + 1)} disabled={endPage === totalPages || loading || !hasMore}>›</button>
-      </div>
+          <button className="page-btn" onClick={() => handlePageChange(endPage + 1)} disabled={endPage === totalPages || loading || !hasMore}>›</button>
+        </div>
+)}
     </div>
 );
 }
