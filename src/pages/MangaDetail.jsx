@@ -222,7 +222,7 @@ title="Latest First"
 {chaptersLoading ? (
 <div className="loading">Loading chapters...</div>
 ) : sortedChapters.length === 0 ? (
-<p>No chapters found.</p>
+<p>No English chapters available for this manga yet.</p>
 ) : (
 sortedChapters.map((ch, index) => (
 <div

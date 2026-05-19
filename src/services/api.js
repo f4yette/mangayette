@@ -49,7 +49,7 @@ if (sort === "TRENDING_DESC") order = "relevance";
 if (sort === "POPULARITY_DESC") order = "followedCount";
 try {
 const res = await fetch(
-`${PROXY}/mangadex/manga?limit=${perPage}&offset=${offset}&order[${order}]=desc&contentRating[]=safe&contentRating[]=suggestive&includes[]=cover_art`
+`${PROXY}/mangadex/manga?limit=${perPage}&offset=${offset}&order[${order}]=desc&contentRating[]=safe&contentRating[]=suggestive&includes[]=cover_art&availableTranslatedLanguage[]=en`
     );
 const data = await res.json();
 return {
@@ -68,7 +68,7 @@ async function getMangaDexSearch(search, page = 1, perPage = 20) {
 const offset = (page - 1) * perPage;
 try {
 const res = await fetch(
-`${PROXY}/mangadex/manga?title=${encodeURIComponent(search)}&limit=${perPage}&offset=${offset}&contentRating[]=safe&contentRating[]=suggestive&includes[]=cover_art`
+`${PROXY}/mangadex/manga?title=${encodeURIComponent(search)}&limit=${perPage}&offset=${offset}&contentRating[]=safe&contentRating[]=suggestive&includes[]=cover_art&availableTranslatedLanguage[]=en`
     );
 const data = await res.json();
 return {
@@ -122,7 +122,8 @@ return [];
 }
 
 export async function getPopularMangasBySort(sort, page = 1, perPage = 20) {
-const query = `
+try {
+const data = await fetchGraphQL(`
     query ($page:Int!, $perPage:Int!, $sort:[MediaSort]) {
       Page(page:$page, perPage:$perPage) {
         pageInfo { currentPage hasNextPage }
@@ -136,9 +137,7 @@ const query = `
         }
       }
     }
-  `;
-try {
-const data = await fetchGraphQL(query, { page, perPage, sort });
+  `, { page, perPage, sort });
 return data.Page;
   } catch {
 return getMangaDexPopular(page, perPage, sort[0]);
@@ -146,7 +145,8 @@ return getMangaDexPopular(page, perPage, sort[0]);
 }
 
 export async function getPopularMangas(page = 1, perPage = 20) {
-const query = `
+try {
+const data = await fetchGraphQL(`
     query ($page:Int!, $perPage:Int!) {
       Page(page:$page, perPage:$perPage) {
         pageInfo { currentPage hasNextPage }
@@ -160,9 +160,7 @@ const query = `
         }
       }
     }
-  `;
-try {
-const data = await fetchGraphQL(query, { page, perPage });
+  `, { page, perPage });
 return data.Page;
   } catch {
 return getMangaDexPopular(page, perPage, "POPULARITY_DESC");
@@ -170,7 +168,8 @@ return getMangaDexPopular(page, perPage, "POPULARITY_DESC");
 }
 
 export async function searchMangas(search, page = 1, perPage = 100) {
-const query = `
+try {
+const data = await fetchGraphQL(`
     query ($search:String!, $page:Int!, $perPage:Int!) {
       Page(page:$page, perPage:$perPage) {
         pageInfo { currentPage hasNextPage }
@@ -184,9 +183,7 @@ const query = `
         }
       }
     }
-  `;
-try {
-const data = await fetchGraphQL(query, { search, page, perPage });
+  `, { search, page, perPage });
 return data.Page;
   } catch {
 return getMangaDexSearch(search, page, perPage);
@@ -194,7 +191,8 @@ return getMangaDexSearch(search, page, perPage);
 }
 
 export async function getMangaById(id) {
-const query = `
+try {
+const data = await fetchGraphQL(`
     query ($id: Int!) {
       Media(id: $id, type: MANGA) {
         id isAdult
@@ -205,9 +203,7 @@ const query = `
         startDate { year }
       }
     }
-  `;
-try {
-const data = await fetchGraphQL(query, { id });
+  `, { id });
 return data.Media;
   } catch {
 try {
@@ -223,7 +219,7 @@ return null;
 export async function getMangaDexChapters(title) {
 try {
 const searchRes = await fetch(
-`${PROXY}/mangadex/manga?title=${encodeURIComponent(title)}&limit=1`
+`${PROXY}/mangadex/manga?title=${encodeURIComponent(title)}&limit=1&availableTranslatedLanguage[]=en`
     );
 const searchData = await searchRes.json();
 const mangaId = searchData?.data?.[0]?.id;
