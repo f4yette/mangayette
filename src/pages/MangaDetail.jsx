@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { getMangaById, getMangaDexChapters } from "../services/api";
 import "../css/MangaDetail.css";
 
-const MANGADEX_BASE = "https://api.mangadex.org";
+const PROXY = "https://mangayette-proxy.ahmedahmedd1012.workers.dev";
 
 function isUUID(id) {
 return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
@@ -16,7 +16,7 @@ Object.values(md.attributes?.title || {})[0] ||
 const cover = md.relationships?.find((r) => r.type === "cover_art");
 const fileName = cover?.attributes?.fileName;
 const coverUrl = fileName
-? `https://uploads.mangadex.org/covers/${md.id}/${fileName}`
+? `${PROXY}/mangadex/covers/${md.id}/${fileName}`
 : null;
 return {
 id: md.id,
@@ -43,14 +43,23 @@ async function fetchManga() {
 try {
 let data;
 if (isUUID(id)) {
-const res = await fetch(`${MANGADEX_BASE}/manga/${id}?includes[]=cover_art`);
+const res = await fetch(`${PROXY}/mangadex/manga/${id}?includes[]=cover_art`);
 const json = await res.json();
 data = mdToFormat(json.data);
+let allChapters = [];
+let offset = 0;
+const limit = 100;
+while (true) {
 const chapterRes = await fetch(
-`${MANGADEX_BASE}/chapter?manga=${id}&translatedLanguage[]=en&order[chapter]=asc&limit=100`
-          );
+`${PROXY}/mangadex/chapter?manga=${id}&translatedLanguage[]=en&order[chapter]=asc&limit=${limit}&offset=${offset}`
+              );
 const chapterJson = await chapterRes.json();
-setChapters(chapterJson?.data || []);
+const batch = chapterJson?.data || [];
+allChapters = [...allChapters, ...batch];
+if (allChapters.length >= (chapterJson?.total || 0) || batch.length < limit) break;
+offset += limit;
+            }
+setChapters(allChapters);
 } else {
 data = await getMangaById(Number(id));
 const title = data?.title?.english || data?.title?.romaji;
