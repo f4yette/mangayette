@@ -1,232 +1,124 @@
-import { useParams, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { getMangaById, getMangaDexChapters } from "../services/api";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useEffect, useState, useCallback } from "react";
+import { getComickPages } from "../services/api";
 import { supabase } from "../services/supabase";
-import "../css/MangaDetail.css";
+import "../css/ChapterReader.css";
 
 const PROXY = "https://mangayette-proxy.ahmedahmedd1012.workers.dev";
 
-function isUUID(id) {
-return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-}
-
-function mdToFormat(md) {
-const title = md.attributes?.title?.en ||
-Object.values(md.attributes?.title || {})[0] ||
-"Untitled";
-const cover = md.relationships?.find((r) => r.type === "cover_art");
-const fileName = cover?.attributes?.fileName;
-const coverUrl = fileName
-? `${PROXY}/mangadex/covers/${md.id}/${fileName}`
-: null;
-return {
-id: md.id,
-title: { english: title, romaji: title },
-description: md.attributes?.description?.en || "No description available.",
-coverImage: { large: coverUrl },
-chapters: null,
-startDate: { year: md.attributes?.year || null },
-    };
-}
-
-function MangaDetail() {
-const { id } = useParams();
+function ChapterReader() {
+const { id, chapterId } = useParams();
 const navigate = useNavigate();
-const [manga, setManga] = useState(null);
-const [chapters, setChapters] = useState([]);
+const location = useLocation();
+const [pages, setPages] = useState([]);
 const [loading, setLoading] = useState(true);
-const [chaptersLoading, setChaptersLoading] = useState(true);
 const [error, setError] = useState(null);
-const [chapterOrder, setChapterOrder] = useState("asc");
-const [user, setUser] = useState(null);
-const [isFavourited, setIsFavourited] = useState(false);
-const [favLoading, setFavLoading] = useState(false);
-const [lastRead, setLastRead] = useState(null);
+const [readingMode, setReadingMode] = useState("vertical");
+const [currentPage, setCurrentPage] = useState(0);
 
 useEffect(() => {
-supabase.auth.getSession().then(({ data: { session } }) => {
-setUser(session?.user ?? null);
-    });
-  }, []);
-
-useEffect(() => {
-if (!user || !manga) return;
-async function checkFav() {
-const { data } = await supabase
-.from("favourites")
-.select("id")
-.eq("user_id", user.id)
-.eq("manga_id", String(id))
-.single();
-setIsFavourited(!!data);
-      }
-async function checkProgress() {
-const { data } = await supabase
-.from("reading_progress")
-.select("chapter_id, chapter_number")
-.eq("user_id", user.id)
-.eq("manga_id", String(id))
-.single();
-if (data) setLastRead(data);
-      }
-checkFav();
-checkProgress();
-  }, [user, manga, id]);
-
-async function handleFavourite() {
-if (!user) {
-navigate("/login");
-return;
-    }
-setFavLoading(true);
-const title = manga?.title?.english || manga?.title?.romaji || "Untitled";
-const cover = manga?.coverImage?.large;
-const year = manga?.startDate?.year;
-if (isFavourited) {
-await supabase
-.from("favourites")
-.delete()
-.eq("user_id", user.id)
-.eq("manga_id", String(id));
-setIsFavourited(false);
-} else {
-await supabase.from("favourites").insert({
-user_id: user.id,
-manga_id: String(id),
-manga_title: title,
-manga_cover: cover,
-manga_year: year,
-      });
-setIsFavourited(true);
-    }
-setFavLoading(false);
-  }
-
-useEffect(() => {
-async function fetchManga() {
+async function fetchPages() {
 try {
-let data;
-if (isUUID(id)) {
-const res = await fetch(`${PROXY}/mangadex/manga/${id}?includes[]=cover_art`);
-const json = await res.json();
-data = mdToFormat(json.data);
-let allChapters = [];
-let offset = 0;
-const limit = 100;
-while (true) {
-const chapterRes = await fetch(
-`${PROXY}/mangadex/chapter?manga=${id}&translatedLanguage[]=en&order[chapter]=asc&limit=${limit}&offset=${offset}`
-              );
-const chapterJson = await chapterRes.json();
-const batch = chapterJson?.data || [];
-allChapters = [...allChapters, ...batch];
-if (allChapters.length >= (chapterJson?.total || 0) || batch.length < limit) break;
-offset += limit;
-            }
-setChapters(allChapters);
+let pageUrls = [];
+if (chapterId.startsWith("comick_")) {
+const hid = chapterId.replace("comick_", "");
+pageUrls = await getComickPages(hid);
 } else {
-data = await getMangaById(Number(id));
-const title = data?.title?.english || data?.title?.romaji;
-if (title) {
-const chapterData = await getMangaDexChapters(title);
-setChapters(chapterData);
-          }
+const res = await fetch(`${PROXY}/mangadex/at-home/server/${chapterId}`);
+const data = await res.json();
+const base = data.baseUrl;
+const hash = data.chapter.hash;
+const files = data.chapter.data;
+pageUrls = files.map((file) => `${base}/data/${hash}/${file}`);
         }
-setManga(data);
+setPages(pageUrls);
       } catch {
-setError("Failed to load manga.");
+setError("Failed to load chapter.");
       } finally {
 setLoading(false);
-setChaptersLoading(false);
       }
     }
-fetchManga();
-  }, [id]);
+fetchPages();
+  }, [chapterId]);
 
-if (loading) return <div className="loading">Loading...</div>;
+useEffect(() => {
+async function saveProgress() {
+const { data: { session } } = await supabase.auth.getSession();
+if (!session) return;
+await supabase.from("reading_progress").upsert({
+user_id: session.user.id,
+manga_id: id,
+chapter_id: chapterId,
+chapter_number: location.state?.chapterNumber ?? null,
+updated_at: new Date().toISOString(),
+        }, { onConflict: "user_id,manga_id" });
+      }
+saveProgress();
+  }, [id, chapterId]);
+
+const handleKeyDown = useCallback((e) => {
+if (readingMode !== "horizontal") return;
+if (e.key === "ArrowLeft") {
+setCurrentPage((p) => Math.min(pages.length - 1, p + 1));
+      }
+if (e.key === "ArrowRight") {
+setCurrentPage((p) => Math.max(0, p - 1));
+      }
+  }, [readingMode, pages.length]);
+
+useEffect(() => {
+window.addEventListener("keydown", handleKeyDown);
+return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleKeyDown]);
+
+if (loading) return <div className="loading">Loading chapter...</div>;
 if (error) return (
-<div className="manga-detail">
-      <button className="back-btn" onClick={() => navigate("/")}>← Back</button>
+<div className="chapter-reader">
+      <button className="back-btn" onClick={() => navigate(`/manga/${id}`)}>← Back to Manga</button>
       <p>{error}</p>
     </div>
 );
 
-const title = manga?.title?.english || manga?.title?.romaji || "Untitled";
-const image = manga?.coverImage?.large;
-const description = manga?.description
-? manga.description.replace(/<[^>]*>/g, "")
-: "No description available.";
-const year = manga?.startDate?.year ?? "—";
-const totalChapters = manga?.chapters ?? "Ongoing";
-const sortedChapters = chapterOrder === "asc" ? [...chapters] : [...chapters].reverse();
-
 return (
-<div className="manga-detail">
-      <button className="back-btn" onClick={() => navigate("/")}>← Back</button>
-      <div className="manga-detail-content">
-{image && <img src={image} alt={title} />}
-        <div className="manga-detail-info">
-          <h1>{title}</h1>
-          <p className="release_date">{year}</p>
-          <p><strong>Chapters:</strong> {totalChapters}</p>
-          <p>{description}</p>
-          <div className="manga-actions">
-            <button
-className={`fav-btn ${isFavourited ? "active" : ""}`}
-onClick={handleFavourite}
-disabled={favLoading}
+<div className="chapter-reader">
+      <div className="reader-header">
+        <button className="back-btn" onClick={() => navigate(`/manga/${id}`)}>← Back to Manga</button>
+        <div className="reading-mode-btns">
+          <button
+className={readingMode === "vertical" ? "order-btn active" : "order-btn"}
+onClick={() => { setReadingMode("vertical"); setCurrentPage(0); }}
 >
-{isFavourited ? "♥ Remove from Favourites" : "♡ Add to Favourites"}
-            </button>
-{lastRead && (
-<button
-className="continue-btn"
-onClick={() => navigate(`/manga/${id}/chapter/${lastRead.chapter_id}`)}
+            ↕ Vertical
+          </button>
+          <button
+className={readingMode === "horizontal" ? "order-btn active" : "order-btn"}
+onClick={() => { setReadingMode("horizontal"); setCurrentPage(0); }}
 >
-                ▶ Continue Reading
-{lastRead.chapter_number ? ` Ch. ${lastRead.chapter_number}` : ""}
-              </button>
-)}
-          </div>
+            ↔ Horizontal
+          </button>
         </div>
       </div>
-      <div className="chapter-list">
-        <div className="chapter-header">
-          <h2>Chapters</h2>
-          <div className="chapter-order-btns">
-            <button
-className={chapterOrder === "asc" ? "order-btn active" : "order-btn"}
-onClick={() => setChapterOrder("asc")}
->
-              ↑ Oldest
-            </button>
-            <button
-className={chapterOrder === "desc" ? "order-btn active" : "order-btn"}
-onClick={() => setChapterOrder("desc")}
->
-              ↓ Latest
-            </button>
-          </div>
+{readingMode === "vertical" ? (
+<div className="chapter-pages vertical">
+{pages.map((url, i) => (
+<img key={i} src={url} alt={`Page ${i + 1}`} />
+))}
         </div>
-{chaptersLoading ? (
-<div className="loading">Loading chapters...</div>
-) : sortedChapters.length === 0 ? (
-<p>No chapters found.</p>
 ) : (
-sortedChapters.map((ch) => (
-<div
-key={ch.id}
-className={`chapter-item ${lastRead?.chapter_id === ch.id ? "last-read" : ""}`}
-onClick={() => navigate(`/manga/${id}/chapter/${ch.id}`)}
+<div className="chapter-pages horizontal">
+          <div
+className="horizontal-strip"
+style={{ transform: `translateX(calc(${currentPage} * 100vw))` }}
 >
-              Chapter {ch.attributes.chapter ?? "?"} — {ch.attributes.title || "No title"}
-{lastRead?.chapter_id === ch.id && <span className="last-read-badge">Last Read</span>}
-            </div>
-))
+{[...pages].reverse().map((url, i) => (
+<img key={i} src={url} alt={`Page ${pages.length - i}`} />
+))}
+          </div>
+          <p className="page-counter">{currentPage + 1} / {pages.length}</p>
+        </div>
 )}
-      </div>
     </div>
 );
 }
 
-export default MangaDetail;
+export default ChapterReader;
