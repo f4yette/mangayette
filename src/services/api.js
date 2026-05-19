@@ -22,7 +22,7 @@ Object.values(md.attributes?.title || {})[0] ||
 const cover = md.relationships?.find((r) => r.type === "cover_art");
 const fileName = cover?.attributes?.fileName;
 const coverUrl = fileName
-? `https://uploads.mangadex.org/covers/${md.id}/${fileName}`
+? `${PROXY}/mangadex/covers/${md.id}/${fileName}`
 : null;
 return {
 id: md.id,
@@ -39,38 +39,27 @@ md.attributes?.contentRating === "erotica",
     };
 }
 
-async function getMangaDexPopular(page = 1, perPage = 20) {
-  const offset = (page - 1) * perPage;
-
-  try {
-    const url =
-      `${PROXY}/mangadex/manga` +
-      `?limit=${perPage}` +
-      `&offset=${offset}` +
-      `&order[followedCount]=desc` +
-      `&contentRating[]=safe` +
-      `&contentRating[]=suggestive` +
-      `&includes[]=cover_art`;
-
-    const res = await fetch(url);
-    const data = await res.json();
-
-    console.log("MangaDex Popular:", data); // DEBUG
-
-    return {
-      media: (data?.data || []).map(mdToAnilistFormat),
-      pageInfo: {
-        currentPage: page,
-        hasNextPage: offset + perPage < (data?.total || 0),
-      },
-    };
-  } catch (err) {
-    console.error("MangaDex Popular Error:", err);
-    return {
-      media: [],
-      pageInfo: { currentPage: page, hasNextPage: false },
-    };
-  }
+async function getMangaDexPopular(page = 1, perPage = 20, sort = "TRENDING_DESC") {
+const offset = (page - 1) * perPage;
+let order = "followedCount";
+if (sort === "SCORE_DESC") order = "rating";
+if (sort === "TRENDING_DESC") order = "relevance";
+if (sort === "POPULARITY_DESC") order = "followedCount";
+try {
+const res = await fetch(
+`${PROXY}/mangadex/manga?limit=${perPage}&offset=${offset}&order[${order}]=desc&contentRating[]=safe&contentRating[]=suggestive&includes[]=cover_art`
+    );
+const data = await res.json();
+return {
+media: (data.data || []).map(mdToAnilistFormat),
+pageInfo: {
+currentPage: page,
+hasNextPage: offset + perPage < (data.total || 0),
+        },
+      };
+    } catch {
+return { media: [], pageInfo: { currentPage: page, hasNextPage: false } };
+    }
 }
 
 async function getMangaDexSearch(search, page = 1, perPage = 20) {
