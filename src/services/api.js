@@ -1,5 +1,5 @@
 const PROXY = "https://mangayette-proxy.ahmedahmedd1012.workers.dev";
-const COMICK_API = "https://api.comick.io";
+const COMICK_API = `${PROXY}/comick`;
 const COMICK_IMG = "https://meo.comick.pictures/";
 
 async function fetchGraphQL(query, variables = {}) {
