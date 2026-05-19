@@ -1,32 +1,9 @@
 import "../css/MangaCard.css";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
 import { supabase } from "../services/supabase";
 
-function MangaCard({ manga }) {
+function MangaCard({ manga, user, isFavourited, onFavouriteToggle }) {
 const navigate = useNavigate();
-const [isFavourited, setIsFavourited] = useState(false);
-const [user, setUser] = useState(null);
-
-useEffect(() => {
-supabase.auth.getSession().then(({ data: { session } }) => {
-setUser(session?.user ?? null);
-    });
-  }, []);
-
-useEffect(() => {
-if (!user) return;
-async function checkFavourite() {
-const { data } = await supabase
-.from("favourites")
-.select("id")
-.eq("user_id", user.id)
-.eq("manga_id", String(manga.id))
-.single();
-setIsFavourited(!!data);
-    }
-checkFavourite();
-  }, [user, manga.id]);
 
 async function onFavourite(e) {
 e.stopPropagation();
@@ -40,7 +17,7 @@ await supabase
 .delete()
 .eq("user_id", user.id)
 .eq("manga_id", String(manga.id));
-setIsFavourited(false);
+onFavouriteToggle(manga.id, false);
 } else {
 await supabase.from("favourites").insert({
 user_id: user.id,
@@ -49,7 +26,7 @@ manga_title: manga?.title?.english || manga?.title?.romaji || "Untitled",
 manga_cover: manga?.coverImage?.large,
 manga_year: manga?.startDate?.year,
       });
-setIsFavourited(true);
+onFavouriteToggle(manga.id, true);
     }
   }
 

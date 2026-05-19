@@ -2,6 +2,7 @@ import MangaCard from "../components/MangaCard";
 import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { getPopularMangasBySort, searchMangas } from "../services/api";
+import { supabase } from "../services/supabase";
 import "../css/Home.css";
 
 const BANNED_WORDS = [
@@ -36,11 +37,38 @@ const [loading, setLoading] = useState(true);
 const [error, setError] = useState(null);
 const [searchQuery, setSearchQuery] = useState("");
 const [activeSort, setActiveSort] = useState("TRENDING_DESC");
+const [favouriteIds, setFavouriteIds] = useState(new Set());
+const [user, setUser] = useState(null);
 const totalPages = 50;
 const windowSize = window.innerWidth < 768 ? 5 : 10;
 const location = useLocation();
 const navigate = useNavigate();
 const isFirstRender = useRef(true);
+
+useEffect(() => {
+supabase.auth.getSession().then(({ data: { session } }) => {
+setUser(session?.user ?? null);
+    });
+const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+setUser(session?.user ?? null);
+    });
+return () => subscription.unsubscribe();
+  }, []);
+
+useEffect(() => {
+if (!user) {
+setFavouriteIds(new Set());
+return;
+    }
+async function fetchFavourites() {
+const { data } = await supabase
+.from("favourites")
+.select("manga_id")
+.eq("user_id", user.id);
+setFavouriteIds(new Set((data || []).map((f) => f.manga_id)));
+      }
+fetchFavourites();
+  }, [user]);
 
 const loadMangas = async (pageNum, query = "", sort = activeSort) => {
 try {
@@ -120,6 +148,18 @@ setSearchQuery("");
 setPage(1);
   };
 
+const handleFavouriteToggle = (mangaId, newState) => {
+setFavouriteIds((prev) => {
+const next = new Set(prev);
+if (newState) {
+next.add(String(mangaId));
+} else {
+next.delete(String(mangaId));
+      }
+return next;
+    });
+  };
+
 const startPage = Math.floor((page - 1) / windowSize) * windowSize + 1;
 const endPage = Math.min(startPage + windowSize - 1, totalPages);
 const pages = Array.from(
@@ -163,7 +203,13 @@ onClick={() => handleSortChange(opt.value)}
 <div className="grid-loading">Loading...</div>
 ) : (
 mangas.map((manga) => (
-<MangaCard manga={manga} key={manga.id} />
+<MangaCard
+manga={manga}
+key={manga.id}
+user={user}
+isFavourited={favouriteIds.has(String(manga.id))}
+onFavouriteToggle={handleFavouriteToggle}
+/>
 ))
 )}
       </div>
