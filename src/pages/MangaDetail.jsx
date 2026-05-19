@@ -41,6 +41,7 @@ const [chapterOrder, setChapterOrder] = useState("asc");
 const [user, setUser] = useState(null);
 const [isFavourited, setIsFavourited] = useState(false);
 const [favLoading, setFavLoading] = useState(false);
+const [lastRead, setLastRead] = useState(null);
 
 useEffect(() => {
 supabase.auth.getSession().then(({ data: { session } }) => {
@@ -59,7 +60,17 @@ const { data } = await supabase
 .single();
 setIsFavourited(!!data);
       }
+async function checkProgress() {
+const { data } = await supabase
+.from("reading_progress")
+.select("chapter_id, chapter_number")
+.eq("user_id", user.id)
+.eq("manga_id", String(id))
+.single();
+if (data) setLastRead(data);
+      }
 checkFav();
+checkProgress();
   }, [user, manga, id]);
 
 async function handleFavourite() {
@@ -148,6 +159,7 @@ const description = manga?.description
 const year = manga?.startDate?.year ?? "—";
 const totalChapters = manga?.chapters ?? "Ongoing";
 const sortedChapters = chapterOrder === "asc" ? [...chapters] : [...chapters].reverse();
+const chapterNavList = sortedChapters.map((c) => ({ id: c.id, number: c.attributes.chapter }));
 
 return (
 <div className="manga-detail">
@@ -159,13 +171,32 @@ return (
           <p className="release_date">{year}</p>
           <p><strong>Chapters:</strong> {totalChapters}</p>
           <p>{description}</p>
-          <button
+          <div className="manga-actions">
+            <button
 className={`fav-btn ${isFavourited ? "active" : ""}`}
 onClick={handleFavourite}
 disabled={favLoading}
 >
 {isFavourited ? "♥ Remove from Favourites" : "♡ Add to Favourites"}
-          </button>
+            </button>
+{lastRead && (
+<button
+className="continue-btn"
+onClick={() => {
+const idx = chapterNavList.findIndex((c) => c.id === lastRead.chapter_id);
+navigate(`/manga/${id}/chapter/${lastRead.chapter_id}`, {
+state: {
+chapterNumber: lastRead.chapter_number,
+chapters: chapterNavList,
+currentIndex: idx,
+                  }
+                });
+              }}
+>
+                ▶ Continue Ch. {lastRead.chapter_number || ""}
+              </button>
+)}
+          </div>
         </div>
       </div>
       <div className="chapter-list">
@@ -193,13 +224,20 @@ title="Latest First"
 ) : sortedChapters.length === 0 ? (
 <p>No chapters found.</p>
 ) : (
-sortedChapters.map((ch) => (
+sortedChapters.map((ch, index) => (
 <div
 key={ch.id}
-className="chapter-item"
-onClick={() => navigate(`/manga/${id}/chapter/${ch.id}`)}
+className={`chapter-item ${lastRead?.chapter_id === ch.id ? "last-read" : ""}`}
+onClick={() => navigate(`/manga/${id}/chapter/${ch.id}`, {
+state: {
+chapterNumber: ch.attributes.chapter,
+chapters: chapterNavList,
+currentIndex: index,
+              }
+})}
 >
               Chapter {ch.attributes.chapter ?? "?"} — {ch.attributes.title || "No title"}
+{lastRead?.chapter_id === ch.id && <span className="last-read-badge">Last Read</span>}
             </div>
 ))
 )}

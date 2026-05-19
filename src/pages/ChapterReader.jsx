@@ -16,6 +16,11 @@ const [error, setError] = useState(null);
 const [readingMode, setReadingMode] = useState("vertical");
 const [currentPage, setCurrentPage] = useState(0);
 
+const chapters = location.state?.chapters || [];
+const currentIndex = location.state?.currentIndex ?? -1;
+const prevChapter = currentIndex > 0 ? chapters[currentIndex - 1] : null;
+const nextChapter = currentIndex < chapters.length - 1 ? chapters[currentIndex + 1] : null;
+
 useEffect(() => {
 async function fetchPages() {
 try {
@@ -71,6 +76,17 @@ window.addEventListener("keydown", handleKeyDown);
 return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleKeyDown]);
 
+function goToChapter(ch, index) {
+setCurrentPage(0);
+navigate(`/manga/${id}/chapter/${ch.id}`, {
+state: {
+chapterNumber: ch.number,
+chapters,
+currentIndex: index,
+      }
+    });
+  }
+
 if (loading) return <div className="loading">Loading chapter...</div>;
 if (error) return (
 <div className="chapter-reader">
@@ -117,6 +133,18 @@ style={{ transform: `translateX(calc(${currentPage} * 100vw))` }}
           <p className="page-counter">{currentPage + 1} / {pages.length}</p>
         </div>
 )}
+      <div className="chapter-nav">
+{prevChapter ? (
+<button className="chapter-nav-btn" onClick={() => goToChapter(prevChapter, currentIndex - 1)}>
+            ← Ch. {prevChapter.number ?? "Prev"}
+          </button>
+) : <div />}
+{nextChapter ? (
+<button className="chapter-nav-btn" onClick={() => goToChapter(nextChapter, currentIndex + 1)}>
+            Ch. {nextChapter.number ?? "Next"} →
+          </button>
+) : <div />}
+      </div>
     </div>
 );
 }
