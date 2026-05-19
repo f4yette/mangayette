@@ -21,7 +21,7 @@ const { data } = await supabase
 .from("favourites")
 .select("id")
 .eq("user_id", user.id)
-.eq("manga_id", manga.id)
+.eq("manga_id", String(manga.id))
 .single();
 setIsFavourited(!!data);
     }
@@ -39,12 +39,12 @@ await supabase
 .from("favourites")
 .delete()
 .eq("user_id", user.id)
-.eq("manga_id", manga.id);
+.eq("manga_id", String(manga.id));
 setIsFavourited(false);
 } else {
 await supabase.from("favourites").insert({
 user_id: user.id,
-manga_id: manga.id,
+manga_id: String(manga.id),
 manga_title: manga?.title?.english || manga?.title?.romaji || "Untitled",
 manga_cover: manga?.coverImage?.large,
 manga_year: manga?.startDate?.year,

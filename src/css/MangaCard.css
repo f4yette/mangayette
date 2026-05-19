@@ -79,6 +79,12 @@
   transform: scale(1.1);
 }
 
+.favourite-btn.active {
+  color: #ff4757;
+  background-color: rgba(255, 71, 87, 0.2);
+  border-color: #ff4757;
+}
+
 .manga-info {
   padding: 0.5rem;
   flex: 1;

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../services/supabase";
 import { useNavigate } from "react-router-dom";
-import MangaCard from "../components/MangaCard";
 import "../css/Favourites.css";
 
 function Favourites() {
@@ -34,6 +33,16 @@ setLoading(false);
 fetchFavourites();
   }, [user]);
 
+async function removeFavourite(e, mangaId) {
+e.stopPropagation();
+await supabase
+.from("favourites")
+.delete()
+.eq("user_id", user.id)
+.eq("manga_id", mangaId);
+setFavourites((prev) => prev.filter((f) => f.manga_id !== mangaId));
+  }
+
 if (loading) return <div className="loading">Loading...</div>;
 
 return (
@@ -44,9 +53,21 @@ return (
 ) : (
 <div className="mangas-grid">
 {favourites.map((fav) => (
-<div key={fav.manga_id} className="manga-card" onClick={() => navigate(`/manga/${fav.manga_id}`)}>
+<div
+key={fav.manga_id}
+className="manga-card"
+onClick={() => navigate(`/manga/${fav.manga_id}`)}
+>
               <div className="manga-poster">
 {fav.manga_cover && <img src={fav.manga_cover} alt={fav.manga_title} />}
+                <div className="manga-overlay">
+                  <button
+className="favourite-btn active"
+onClick={(e) => removeFavourite(e, fav.manga_id)}
+>
+                    ♥
+                  </button>
+                </div>
               </div>
               <div className="manga-info">
                 <h3>{fav.manga_title}</h3>

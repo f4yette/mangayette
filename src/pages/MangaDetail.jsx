@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { getMangaById, getMangaDexChapters } from "../services/api";
+import { supabase } from "../services/supabase";
 import "../css/MangaDetail.css";
 
 const PROXY = "https://mangayette-proxy.ahmedahmedd1012.workers.dev";
@@ -37,6 +38,58 @@ const [loading, setLoading] = useState(true);
 const [chaptersLoading, setChaptersLoading] = useState(true);
 const [error, setError] = useState(null);
 const [chapterOrder, setChapterOrder] = useState("asc");
+const [user, setUser] = useState(null);
+const [isFavourited, setIsFavourited] = useState(false);
+const [favLoading, setFavLoading] = useState(false);
+
+useEffect(() => {
+supabase.auth.getSession().then(({ data: { session } }) => {
+setUser(session?.user ?? null);
+    });
+  }, []);
+
+useEffect(() => {
+if (!user || !manga) return;
+async function checkFav() {
+const { data } = await supabase
+.from("favourites")
+.select("id")
+.eq("user_id", user.id)
+.eq("manga_id", String(id))
+.single();
+setIsFavourited(!!data);
+      }
+checkFav();
+  }, [user, manga, id]);
+
+async function handleFavourite() {
+if (!user) {
+navigate("/login");
+return;
+    }
+setFavLoading(true);
+const title = manga?.title?.english || manga?.title?.romaji || "Untitled";
+const cover = manga?.coverImage?.large;
+const year = manga?.startDate?.year;
+if (isFavourited) {
+await supabase
+.from("favourites")
+.delete()
+.eq("user_id", user.id)
+.eq("manga_id", String(id));
+setIsFavourited(false);
+} else {
+await supabase.from("favourites").insert({
+user_id: user.id,
+manga_id: String(id),
+manga_title: title,
+manga_cover: cover,
+manga_year: year,
+      });
+setIsFavourited(true);
+    }
+setFavLoading(false);
+  }
 
 useEffect(() => {
 async function fetchManga() {
@@ -106,6 +159,13 @@ return (
           <p className="release_date">{year}</p>
           <p><strong>Chapters:</strong> {totalChapters}</p>
           <p>{description}</p>
+          <button
+className={`fav-btn ${isFavourited ? "active" : ""}`}
+onClick={handleFavourite}
+disabled={favLoading}
+>
+{isFavourited ? "♥ Remove from Favourites" : "♡ Add to Favourites"}
+          </button>
         </div>
       </div>
       <div className="chapter-list">

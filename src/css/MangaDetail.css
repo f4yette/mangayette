@@ -60,6 +60,35 @@
   color: #c4b5fd;
 }
 
+.fav-btn {
+  margin-top: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  border: 1px solid #8b5cf6;
+  background-color: transparent;
+  color: #c4b5fd;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: fit-content;
+}
+
+.fav-btn:hover {
+  background-color: rgba(139, 92, 246, 0.15);
+}
+
+.fav-btn.active {
+  background-color: #8b5cf6;
+  color: #fff;
+  border-color: #8b5cf6;
+}
+
+.fav-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .chapter-list {
   border-top: 1px solid #333;
   padding-top: 2rem;
