@@ -1,4 +1,6 @@
 const PROXY = "https://mangayette-proxy.ahmedahmedd1012.workers.dev";
+const COMICK_API = "https://api.comick.io";
+const COMICK_IMG = "https://meo.comick.pictures/";
 
 async function fetchGraphQL(query, variables = {}) {
 const res = await fetch(`${PROXY}/anilist`, {
@@ -81,6 +83,44 @@ return { media: [], pageInfo: { currentPage: page, hasNextPage: false } };
     }
 }
 
+async function getComickChapters(title) {
+try {
+const searchRes = await fetch(
+`${COMICK_API}/v1.0/search?q=${encodeURIComponent(title)}&limit=1&lang=en`
+    );
+const searchData = await searchRes.json();
+const comic = searchData?.[0];
+if (!comic?.hid) return [];
+const chapterRes = await fetch(
+`${COMICK_API}/comic/${comic.hid}/chapters?lang=en&limit=300`
+    );
+const chapterData = await chapterRes.json();
+const chapters = chapterData?.chapters || [];
+return chapters.map((ch) => ({
+id: `comick_${ch.hid}`,
+isComick: true,
+hid: ch.hid,
+attributes: {
+chapter: ch.chap,
+title: ch.title || "",
+      },
+    }));
+  } catch {
+return [];
+  }
+}
+
+export async function getComickPages(hid) {
+try {
+const res = await fetch(`${COMICK_API}/chapter/${hid}`);
+const data = await res.json();
+const images = data?.chapter?.images || data?.images || [];
+return images.map((img) => `${COMICK_IMG}${img.b2key}`);
+  } catch {
+return [];
+  }
+}
+
 export async function getPopularMangasBySort(sort, page = 1, perPage = 20) {
 const query = `
     query ($page:Int!, $perPage:Int!, $sort:[MediaSort]) {
@@ -129,7 +169,7 @@ return getMangaDexPopular(page, perPage, "POPULARITY_DESC");
   }
 }
 
-export async function searchMangas(search, page = 1, perPage = 20) {
+export async function searchMangas(search, page = 1, perPage = 100) {
 const query = `
     query ($search:String!, $page:Int!, $perPage:Int!) {
       Page(page:$page, perPage:$perPage) {
@@ -187,7 +227,7 @@ const searchRes = await fetch(
     );
 const searchData = await searchRes.json();
 const mangaId = searchData?.data?.[0]?.id;
-if (!mangaId) return [];
+if (!mangaId) return getComickChapters(title);
 let allChapters = [];
 let offset = 0;
 const limit = 100;
@@ -201,9 +241,10 @@ allChapters = [...allChapters, ...chapters];
 if (allChapters.length >= (chapterData?.total || 0) || chapters.length < limit) break;
 offset += limit;
       }
+if (allChapters.length === 0) return getComickChapters(title);
 return allChapters;
   } catch {
-return [];
+return getComickChapters(title);
   }
 }
 

@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState, useCallback } from "react";
+import { getComickPages } from "../services/api";
 import "../css/ChapterReader.css";
 
 const PROXY = "https://mangayette-proxy.ahmedahmedd1012.workers.dev";
@@ -16,12 +17,19 @@ const [currentPage, setCurrentPage] = useState(0);
 useEffect(() => {
 async function fetchPages() {
 try {
+let pageUrls = [];
+if (chapterId.startsWith("comick_")) {
+const hid = chapterId.replace("comick_", "");
+pageUrls = await getComickPages(hid);
+} else {
 const res = await fetch(`${PROXY}/mangadex/at-home/server/${chapterId}`);
 const data = await res.json();
 const base = data.baseUrl;
 const hash = data.chapter.hash;
 const files = data.chapter.data;
-setPages(files.map((file) => `${base}/data/${hash}/${file}`));
+pageUrls = files.map((file) => `${base}/data/${hash}/${file}`);
+        }
+setPages(pageUrls);
       } catch {
 setError("Failed to load chapter.");
       } finally {
@@ -35,10 +43,10 @@ const handleKeyDown = useCallback((e) => {
 if (readingMode !== "horizontal") return;
 if (e.key === "ArrowLeft") {
 setCurrentPage((p) => Math.min(pages.length - 1, p + 1));
-    }
+      }
 if (e.key === "ArrowRight") {
 setCurrentPage((p) => Math.max(0, p - 1));
-    }
+      }
   }, [readingMode, pages.length]);
 
 useEffect(() => {
