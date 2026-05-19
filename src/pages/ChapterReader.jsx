@@ -2,6 +2,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState, useCallback } from "react";
 import "../css/ChapterReader.css";
 
+const PROXY = "https://mangayette-proxy.ahmedahmedd1012.workers.dev";
+
 function ChapterReader() {
 const { id, chapterId } = useParams();
 const navigate = useNavigate();
@@ -14,7 +16,7 @@ const [currentPage, setCurrentPage] = useState(0);
 useEffect(() => {
 async function fetchPages() {
 try {
-const res = await fetch(`https://api.mangadex.org/at-home/server/${chapterId}`);
+const res = await fetch(`${PROXY}/mangadex/at-home/server/${chapterId}`);
 const data = await res.json();
 const base = data.baseUrl;
 const hash = data.chapter.hash;
